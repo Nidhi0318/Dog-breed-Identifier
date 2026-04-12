@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🐶 Pet Profiler - Dog Breed Identifier</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+
+  <style>
+    body {
+      background-image: url("https://static.vecteezy.com/system/resources/previews/006/180/933/original/set-of-cute-cartoonish-dogs-isolated-on-a-white-background-free-vector.jpg");
+      background-size: cover;
+      background-repeat: no-repeat;
+      background-position: center;
+      backdrop-filter: blur(5px);
+      font-family: 'Poppins', sans-serif;
+      overflow-x: hidden;
+    }
+
+    @keyframes glowPulse {
+      0% { box-shadow: 0 0 20px rgba(255, 200, 100, 0.6); }
+      50% { box-shadow: 0 0 40px rgba(255, 180, 50, 0.8); }
+      100% { box-shadow: 0 0 20px rgba(255, 200, 100, 0.6); }
+    }
+
+    .highlight-card {
+      background: rgba(255, 255, 255, 0.85);
+      border: 2px solid rgba(255, 193, 7, 0.5);
+      box-shadow: 0 0 25px rgba(255, 174, 0, 0.4);
+      animation: glowPulse 3s infinite ease-in-out;
+    }
+
+    #dropZone {
+      transition: all 0.3s ease;
+      border: 3px dashed rgba(255, 174, 0, 0.8);
+    }
+    #dropZone:hover {
+      transform: scale(1.03);
+      box-shadow: 0 0 25px rgba(255, 174, 0, 0.6);
+      background-color: rgba(255, 249, 196, 0.6);
+    }
+
+    .loader {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #ff9900;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+
+<body class="min-h-screen flex flex-col items-center justify-center">
+
+  <div class="highlight-card w-full max-w-lg p-8 rounded-3xl text-center shadow-2xl">
+    <h1 class="text-5xl font-extrabold text-yellow-700 mb-3 animate-bounce">🐾 Pet Profiler</h1>
+    <p class="text-gray-800 text-lg mb-6">Upload your dog's photo to learn its breed!</p>
+
+    
+    <div id="dropZone" class="p-8 rounded-2xl bg-yellow-50 cursor-pointer">
+      <p class="text-gray-600 text-lg font-semibold">📸 Click to Upload</p>
+      <input type="file" id="imageInput" accept="image/*" class="hidden" />
+    </div>
+
+    <button id="uploadBtn"
+      class="mt-6 text-white px-6 py-3 rounded-xl w-full font-semibold text-lg shadow-md bg-yellow-500 hover:bg-yellow-600">
+      🔍 Predict Breed
+    </button>
+
+    <div id="loader" class="loader mt-6 hidden"></div>
+
+    <div id="result" class="mt-6 hidden">
+      <h2 class="text-3xl font-bold text-gray-800 mb-4">✨ Prediction Result</h2>
+      <img id="preview" class="mx-auto rounded-3xl shadow-lg mb-4 w-56 h-56 object-cover border-4 border-yellow-300" />
+      <div id="output"></div>
+    </div>
+  </div>
+
+  <script>
+  const dropZone = document.getElementById('dropZone');
+  const fileInput = document.getElementById('imageInput');
+  const uploadBtn = document.getElementById('uploadBtn');
+  const loader = document.getElementById('loader');
+  const resultDiv = document.getElementById('result');
+  const previewImg = document.getElementById('preview');
+  const outputDiv = document.getElementById('output');
+
+  dropZone.onclick = () => fileInput.click();
+
+  uploadBtn.onclick = async () => {           
+    if (!fileInput.files.length) {
+      alert("Please upload an image first!");
+      return;
+    }
+
+    const file = fileInput.files[0];
+    previewImg.src = URL.createObjectURL(file);
+
+    resultDiv.classList.remove("hidden");
+    loader.classList.remove("hidden");
+    outputDiv.innerHTML = "";
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const res = await fetch("http://127.0.0.1:5000/predict", {
+        method: "POST",
+        body: formData
+      });
+
+      const data = await res.json();
+      loader.classList.add("hidden");
+
+      if (data.error) {
+        outputDiv.innerHTML = `<p class='text-red-500 font-bold'>${data.error}</p>`;
+        return;
+      }
+
+      outputDiv.innerHTML = `
+        <div class="p-4 rounded-2xl bg-yellow-100 shadow-md">
+          <p class="text-3xl font-bold text-yellow-700">${data.breed}</p>
+
+          <div class="w-full bg-gray-300 rounded-full h-4 mt-4">
+            <div class="bg-yellow-500 h-4 rounded-full" style="width: ${data.confidence}%;"></div>
+          </div>
+
+          <p class="text-gray-800 font-semibold mt-2">Confidence: ${data.confidence}%</p>
+          <p class="text-gray-700 italic mt-2">${data.behavior}</p>
+        </div>
+      `;
+
+    } catch (err) {
+      loader.classList.add("hidden");
+      outputDiv.innerHTML = `<p class='text-red-500 font-bold'>Error: ${err}</p>`;
+    }
+  };
+</script>
+
+
+</body>
+</html>
