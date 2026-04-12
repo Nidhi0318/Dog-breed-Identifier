@@ -9,14 +9,20 @@
 - Python
 - Flask
 - TensorFlow
-- React (if frontend)
 
 ## ▶️ How to Run
-pip install -r requirements.txt
+python -m venv venv
+venv\Scripts\activate
+pip install flask flask-cors tensorflow numpy pillow
 python app.py
+##Test in browser
+http://127.0.0.1:5000
+You should see:
+Dog Breed Predictor API is running!
+##frontend
+index-open live server 
 
 ## ⚠️ Note
 Run model_training_fast.py to generate model file
 
-## 📸 Output
-(Add screenshots here)
+
